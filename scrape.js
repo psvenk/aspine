@@ -429,6 +429,37 @@ async function submit_login(username, password, apache_token, session_id) {
 	return page.includes("Invalid login.");
 }
 
+// Returns object with term names and termFilter values
+async function get_terms(session_id) {
+	let $ = cheerio.load(await fetch_body(
+		"https://aspen.cpsd.us/aspen/portalClassList.do?navkey=academics.classes.list",
+		{
+			"credentials": "include",
+			"headers": {
+				"Cookie": "deploymentId=x2sis; JSESSIONID=" + session_id,
+				"Accept-Encoding": HEADERS["Accept-Encoding"],
+				"Accept-Language": HEADERS["Accept-Language"],
+				"Upgrade-Insecure-Requests": "1",
+				"User-Agent": HEADERS["User-Agent"],
+				"Accept": HEADERS["Accept"],
+				"Referer": "https://aspen.cpsd.us/aspen/home.do",
+				"Connection": "keep-alive"
+			},
+			"referrer": "https://aspen.cpsd.us/aspen/home.do",
+			"referrerPolicy": "strict-origin-when-cross-origin",
+			"body": null,
+			"method": "GET",
+			"mode": "cors"
+		}
+	));
+
+	// Return an array of objects with the name and the termFilter value
+	// of each term in the termFilter dropdown
+	return Array.from($('select[name="termFilter"]').children().map(
+		(i, elem) => ({name: $(elem).text(), termFilter: $(elem).attr('value')})
+	));
+}
+
 // Returns object with classes (name, grade, id),
 // student oid, and apache_token
 async function scrape_academics(session_id) {
